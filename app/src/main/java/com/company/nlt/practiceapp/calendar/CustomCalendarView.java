@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 public class CustomCalendarView extends LinearLayout implements View.OnClickListener {
@@ -38,7 +37,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
     private View view;
     private Calendar currentCalendar;
     private Locale locale;
-    private ArrayList<Date> selectedDaysByClick;
     private ArrayList<Integer> neighboringPositionsByClick;
     private ArrayList<Date> selectedDaysByLongClick;
     private ArrayList<Integer> borders;
@@ -71,6 +69,12 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
     private int currentMonthIndex;
     private int firstDayOfWeek = Calendar.SUNDAY;
     private boolean isOverflowDateVisible = true;
+    private CalendarPresenter calendarPresenter;
+
+    public static final int STATE_UNSELECTED = 0;
+    public static final int STATE_SELECTED_BY_EDIT = 1;
+    public static final int STATE_SELECTED_PENDING = 3;
+    public static final int STATE_SELECTED_FOREVER = 4;
 
     public CustomCalendarView(Context mContext) {
         this(mContext, null);
@@ -79,7 +83,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
     public CustomCalendarView(Context mContext, AttributeSet attrs) {
         super(mContext, attrs);
         this.mContext = mContext;
-        selectedDaysByClick = new ArrayList<>();
         neighboringPositionsByClick = new ArrayList<>();
         selectedDaysByLongClick = new ArrayList<>();
         borders = new ArrayList<>();
@@ -180,6 +183,8 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
      * Initialize calendar for current month
      */
     private void initializeCalendarData() {
+        CalendarDataHolder calendarDataHolder = new CalendarDataHolder();
+        calendarPresenter = new CalendarPresenter(calendarDataHolder, this);
         Locale locale = mContext.getResources().getConfiguration().locale;
         Calendar currentCalendar = Calendar.getInstance(locale);
         setFirstDayOfWeek(Calendar.SUNDAY);
@@ -307,7 +312,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
         this.currentCalendar = currentCalendar;
         this.currentCalendar.setFirstDayOfWeek(getFirstDayOfWeek());
         locale = mContext.getResources().getConfiguration().locale;
-
         initializeTitleLayout();
         initializeWeekLayout();
         setDaysInCalendar();
@@ -331,34 +335,21 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
         }
     }
 
-    private void markDayAsSelectedByClick(Date currentDate) {
-        borders.clear();
-
-        final Calendar calendar = Calendar.getInstance();
-        calendar.setFirstDayOfWeek(getFirstDayOfWeek());
-        currentCalendar.setTime(currentDate);
-
-        int indexOfSelectedDate = getDayIndexByDate(currentCalendar);
-        storeNeighboringPositions(indexOfSelectedDate);
-
-        DayView dayView = getDayOfMonthText(currentCalendar);
-        if (!dayView.isDayEnabledForClick()) {
-            return;
+    public void updateDayBackground(int state, DayView dayView) {
+        switch (state) {
+            case STATE_UNSELECTED:
+                setDayViewColor(dayView, calendarBackgroundColor, calendarTitleTextColor);
+                break;
+            case STATE_SELECTED_BY_EDIT:
+                setDayViewBackgroundResource(dayView, selectedDayBackgroundBlack, selectedDayTextColorWhite);
+                break;
+            case STATE_SELECTED_PENDING:
+                setDayViewBackgroundResource(dayView, selectedDayBackgroundGrey, calendarTitleTextColor);
+                break;
+            case STATE_SELECTED_FOREVER:
+                setDayViewBackgroundResource(dayView, selectedDayBackgroundYellow, calendarTitleTextColor);
+                break;
         }
-
-        if (!dateWasSelected(currentDate, selectedDaysByClick)) {
-            setDayViewBackgroundResource(
-                    dayView,
-                    selectedDayBackgroundBlack,
-                    selectedDayTextColorWhite);
-            storeLastValuesByClick(currentDate);
-        } else {
-            removeDayByRepeatClick(currentDate, selectedDaysByClick);
-            dayView.setDayEnabledForLongClick(true);
-        }
-        setSingleClicksRange(CLICK_KEY_CODE);
-
-        Log.d(TAG, "single clicks " + selectedDaysByClick.toString());
     }
 
     private void storeNeighboringPositions(int indexOfSelectedDate) {
@@ -450,20 +441,15 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
         Log.d(TAG, "long clicks: " + selectedDaysByLongClick.toString());
     }
 
-    private void clearSelectedDaysByClick() {selectedDaysByClick.clear();}
-
     private OnClickListener onDayOfMonthClickListener = new OnClickListener() {
         @Override
         public void onClick(View view) {
             String tagId = getTagId((ViewGroup) view);
-            final DayView dayOfMonthText = (DayView) view.findViewWithTag(DAY_OF_MONTH_TEXT + tagId);
-            final Calendar calendar = getCalendar(dayOfMonthText);
-
-            if (!dayOfMonthText.isDayEnabled()) {
+            final DayView dayView = (DayView) view.findViewWithTag(DAY_OF_MONTH_TEXT + tagId);
+            if (!dayView.isDayEnabled()) {
                 return;
             }
-
-            markDayAsSelectedByClick(calendar.getTime());
+            calendarPresenter.add(dayView.getDate());
         }
     };
 
@@ -519,15 +505,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
                     selectedDayBackgroundRangeBlack,
                     selectedDayTextColorWhite);
         }
-    }
-
-    private boolean dateWasSelected(Date currentDate, ArrayList<Date> selectedDays) {
-        for (Date date : selectedDays) {
-            if (date.equals(currentDate)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void removeDayByRepeatClick(Date currentDate, ArrayList<Date> selectedDays) {
@@ -613,15 +590,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
         return calendar;
     }
 
-    @NonNull private Calendar getCalendar(DayView dayOfMonthText) {
-        final Calendar calendar = Calendar.getInstance();
-        calendar.setFirstDayOfWeek(getFirstDayOfWeek());
-        calendar.setTime(currentCalendar.getTime());
-        calendar.set(
-                Calendar.DAY_OF_MONTH,
-                Integer.valueOf(dayOfMonthText.getText().toString()));
-        return calendar;
-    }
 
     @NonNull private String getTagId(ViewGroup view) {
         String tagId = (String) view.getTag();
@@ -643,6 +611,10 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
 
     private Typeface setFont(String font) {
         return Typeface.createFromAsset(getContext().getAssets(), font);
+    }
+
+    public Calendar getCurrentCalendar() {
+        return currentCalendar;
     }
 
     public boolean isOverflowDateVisible() {

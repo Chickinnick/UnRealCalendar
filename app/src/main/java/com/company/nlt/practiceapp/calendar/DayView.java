@@ -61,4 +61,8 @@ public class DayView extends TextView {
     public void setDayEnabledForLongClick(boolean dayEnabledForLongClick) {
         isDayEnabledForLongClick = dayEnabledForLongClick;
     }
+
+    public Date getDate() {
+        return date;
+    }
 }
