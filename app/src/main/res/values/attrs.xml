@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CustomCalendarView">
+        <attr name="calendarTitleTextColor" format="color" />
+        <attr name="dayOfWeekTextColor" format="color" />
+        <attr name="dayOfMonthTextColor" format="color" />
+        <attr name="calendarBackgroundColor" format="color" />
+        <attr name="disabledDayBackgroundColor" format="color" />
+        <attr name="disabledDayTextColor" format="color" />
+
+        <attr name="selectedDayBackgroundYellow" format="integer" />
+        <attr name="selectedDayStartBorderYellow" format="integer" />
+        <attr name="selectedDayEndBorderYellow" format="integer" />
+        <attr name="selectedDayBackgroundRangeYellow" format="color" />
+
+        <attr name="selectedDayBackgroundBlack" format="integer" />
+        <attr name="selectedDayStartBorderBlack" format="integer" />
+        <attr name="selectedDayEndBorderBlack" format="integer" />
+        <attr name="selectedDayBackgroundRangeBlack" format="color" />
+
+        <attr name="selectedDayBackgroundGrey" format="integer" />
+        <attr name="selectedDayStartBorderGrey" format="integer" />
+        <attr name="selectedDayEndBorderGrey" format="integer" />
+        <attr name="selectedDayBackgroundRangeGrey" format="color" />
+
+        <attr name="selectedDayTextColor" format="color" />
+        <attr name="weekLayoutBackgroundColor" format="color" />
+        <attr name="titleLayoutBackgroundColor" format="color" />
+        <attr name="beforeCurrentDayColor" format="color" />
+    </declare-styleable>
+</resources>
