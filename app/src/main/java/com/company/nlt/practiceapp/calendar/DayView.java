@@ -11,7 +11,6 @@ import java.util.List;
 public class DayView extends TextView {
 
     private Date date;
-    private List<DayDecorator> decorators;
     private boolean isDayEnabled;
     private boolean isDayEnabledForLongClick;
     private boolean isDayEnabledForClick;
@@ -28,9 +27,8 @@ public class DayView extends TextView {
         super(context, attrs, defStyleAttr);
     }
 
-    public void bind(Date date, List<DayDecorator> decorators) {
+    public void bind(Date date) {
         this.date = date;
-        this.decorators = decorators;
         isDayEnabled = true;
         isDayEnabledForLongClick = true;
         isDayEnabledForClick = true;
@@ -39,13 +37,6 @@ public class DayView extends TextView {
         setText(String.valueOf(day));
     }
 
-    public void decorate() {
-        if (decorators != null) {
-            for (DayDecorator decorator : decorators) {
-                decorator.decorate(this);
-            }
-        }
-    }
 
     public boolean isDayEnabled() {
         return isDayEnabled;

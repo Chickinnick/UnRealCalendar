@@ -41,7 +41,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
     private ArrayList<Date> selectedDaysByClick;
     private ArrayList<Integer> neighboringPositionsByClick;
     private ArrayList<Date> selectedDaysByLongClick;
-    private List<DayDecorator> decorators = null;
     private ArrayList<Integer> borders;
     private int disabledDayBackgroundColor;
     private int disabledDayTextColor;
@@ -244,12 +243,11 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
             ViewGroup dayOfMonthContainer = (ViewGroup) view.findViewWithTag(DAY_OF_MONTH_CONTAINER + i);
             DayView dayView = (DayView) view.findViewWithTag(DAY_OF_MONTH_TEXT + i);
             dayView.setTypeface(setFont("Fonts/Roboto-Bold.ttf"));
-            dayView.bind(startCalendar.getTime(), getDecorators());
+            dayView.bind(startCalendar.getTime());
             dayView.setVisibility(View.VISIBLE);
 
             checkIsCurrentMonth(calendar, startCalendar, monthEndIndex,
                                 i, dayOfMonthContainer, dayView);
-            dayView.decorate();
             startCalendar.add(Calendar.DATE, 1);
             dayOfMonthIndex++;
         }
@@ -502,7 +500,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
         if (keyCode == CLICK_KEY_CODE) {
             dayView.setDayEnabledForLongClick(false);
         } else if (keyCode == LONG_CLICK_KEY_CODE) {
-            storeLastValuesByLongClick();
             dayView.setDayEnabledForClick(false);
         }
 
@@ -537,7 +534,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
         try {
             for (Date date : selectedDays) {
                 if (date.equals(currentDate)) {
-                    clearDayOfTheMonthStyle(currentDate);
                     selectedDays.remove(currentDate);
                 }
             }
@@ -647,10 +643,6 @@ public class CustomCalendarView extends LinearLayout implements View.OnClickList
 
     private Typeface setFont(String font) {
         return Typeface.createFromAsset(getContext().getAssets(), font);
-    }
-
-    private List<DayDecorator> getDecorators() {
-        return decorators;
     }
 
     public boolean isOverflowDateVisible() {
